@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "gokulravi26/my-app"
+        IMAGE_NAME = "techtalkjervin/my-app"
         REGISTRY = "docker.io"
         DOCKER_CREDENTIALS_ID = "docker-hub-creds"
         GITHUB_CREDENTIALS_ID = "Git-hub"
@@ -12,15 +12,7 @@ pipeline {
     stages {
         stage('Checkout Code') {
             steps {
-                script {
-                    checkout([$class: 'GitSCM', 
-                        branches: [[name: '*/main']],
-                        userRemoteConfigs: [[
-                            url: 'https://github.com/GokulRavi26/jenkins.git',
-                            credentialsId: GITHUB_CREDENTIALS_ID
-                        ]]
-                    ])
-                }
+                git credentialsId: GITHUB_CREDENTIALS_ID, url: 'https://github.com/GokulRavi26/jenkins.git', branch: 'main'
             }
         }
 
@@ -36,7 +28,7 @@ pipeline {
             steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                        sh 'echo $DOCKER_PASS | docker login $REGISTRY -u $DOCKER_USER --password-stdin'
+                        sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
                     }
                 }
             }
@@ -53,7 +45,7 @@ pipeline {
         stage('Deploy using Docker Compose') {
             steps {
                 script {
-                    sh "cd $APP_DIR && docker-compose up -d"
+                    sh "docker-compose up -d"
                 }
             }
         }
@@ -61,10 +53,10 @@ pipeline {
 
     post {
         success {
-            echo '✅ Pipeline executed successfully! '
+            echo 'Pipeline executed successfully! '
         }
         failure {
-            echo '❌ Pipeline failed! Check the logs for errors.'
+            echo 'Pipeline failed! Check the logs for errors.'
         }
     }
 }
